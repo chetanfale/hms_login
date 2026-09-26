@@ -1,0 +1,29 @@
+# Binaries & Executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server.exe
+bin/
+
+# Environment / Secrets
+.env
+
+# Database data & runtime files
+data/
+*.lock
+*.wt
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Logs & temp files
+*.log
