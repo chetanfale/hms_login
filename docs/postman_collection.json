@@ -42,9 +42,17 @@
 					"script": {
 						"exec": [
 							"var jsonData = pm.response.json();",
-							"if (jsonData.success && jsonData.data) {",
-							"    pm.environment.set('access_token', jsonData.data.access_token);",
-							"    pm.environment.set('refresh_token', jsonData.data.refresh_token);",
+							"if (jsonData && jsonData.success && jsonData.data) {",
+							"    if (jsonData.data.access_token) {",
+							"        pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+							"        pm.environment.set('access_token', jsonData.data.access_token);",
+							"        pm.globals.set('access_token', jsonData.data.access_token);",
+							"    }",
+							"    if (jsonData.data.refresh_token) {",
+							"        pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+							"        pm.environment.set('refresh_token', jsonData.data.refresh_token);",
+							"        pm.globals.set('refresh_token', jsonData.data.refresh_token);",
+							"    }",
 							"}"
 						],
 						"type": "text/javascript"
@@ -85,9 +93,17 @@
 					"script": {
 						"exec": [
 							"var jsonData = pm.response.json();",
-							"if (jsonData.success && jsonData.data) {",
-							"    pm.environment.set('access_token', jsonData.data.access_token);",
-							"    pm.environment.set('refresh_token', jsonData.data.refresh_token);",
+							"if (jsonData && jsonData.success && jsonData.data) {",
+							"    if (jsonData.data.access_token) {",
+							"        pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+							"        pm.environment.set('access_token', jsonData.data.access_token);",
+							"        pm.globals.set('access_token', jsonData.data.access_token);",
+							"    }",
+							"    if (jsonData.data.refresh_token) {",
+							"        pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+							"        pm.environment.set('refresh_token', jsonData.data.refresh_token);",
+							"        pm.globals.set('refresh_token', jsonData.data.refresh_token);",
+							"    }",
 							"}"
 						],
 						"type": "text/javascript"
@@ -152,8 +168,10 @@
 					"script": {
 						"exec": [
 							"var jsonData = pm.response.json();",
-							"if (jsonData.success && jsonData.data && jsonData.data.reset_token) {",
+							"if (jsonData && jsonData.success && jsonData.data && jsonData.data.reset_token) {",
+							"    pm.collectionVariables.set('reset_token', jsonData.data.reset_token);",
 							"    pm.environment.set('reset_token', jsonData.data.reset_token);",
+							"    pm.globals.set('reset_token', jsonData.data.reset_token);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -283,6 +301,21 @@
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reset_token",
+			"value": "",
 			"type": "string"
 		}
 	]
