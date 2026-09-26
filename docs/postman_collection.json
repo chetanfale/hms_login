@@ -11,16 +11,26 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}"
+					"raw": "{\n  \"email\": \"goat@hms.tf\",\n  \"password\": \"g04t3dpass\",\n  \"first_name\": \"Yashwardhan\",\n  \"last_name\": \"Goel\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/register",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "register"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"register"
+					]
 				}
 			}
 		},
@@ -44,16 +54,26 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
+					"raw": "{\n  \"email\": \"goat@hms.tf\",\n  \"password\": \"g04t3dpass\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/login",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "login"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"login"
+					]
 				}
 			}
 		},
@@ -77,7 +97,10 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
@@ -85,8 +108,15 @@
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/refresh",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "refresh"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"refresh"
+					]
 				}
 			}
 		},
@@ -95,12 +125,22 @@
 			"request": {
 				"method": "GET",
 				"header": [
-					{ "key": "Authorization", "value": "Bearer {{access_token}}" }
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
 				],
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/me",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "me"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"me"
+					]
 				}
 			}
 		},
@@ -123,16 +163,26 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"testuser@example.com\"\n}"
+					"raw": "{\n  \"email\": \"goat@hms.tf\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "forgot-password"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"forgot-password"
+					]
 				}
 			}
 		},
@@ -141,7 +191,10 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
@@ -149,8 +202,15 @@
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/reset-password",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "reset-password"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"reset-password"
+					]
 				}
 			}
 		},
@@ -159,17 +219,30 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Authorization", "value": "Bearer {{access_token}}" },
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"old_password\": \"Password123!\",\n  \"new_password\": \"UpdatedPass123!\"\n}"
+					"raw": "{\n  \"old_password\": \"g04t3dpass\",\n  \"new_password\": \"Owner@hms\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/change-password",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "change-password"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"change-password"
+					]
 				}
 			}
 		},
@@ -178,8 +251,14 @@
 			"request": {
 				"method": "POST",
 				"header": [
-					{ "key": "Authorization", "value": "Bearer {{access_token}}" },
-					{ "key": "Content-Type", "value": "application/json" }
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
 				],
 				"body": {
 					"mode": "raw",
@@ -187,8 +266,15 @@
 				},
 				"url": {
 					"raw": "{{baseUrl}}/api/v1/auth/logout",
-					"host": ["{{baseUrl}}"],
-					"path": ["api", "v1", "auth", "logout"]
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"logout"
+					]
 				}
 			}
 		}
