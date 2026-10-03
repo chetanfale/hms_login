@@ -44,6 +44,16 @@ type PasswordResetToken struct {
 	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
 }
 
+// BlacklistedToken represents an instantly revoked JWT Access Token ID stored in MongoDB.
+type BlacklistedToken struct {
+	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	TokenID   string        `bson:"token_id" json:"token_id"` // JTI of the JWT
+	UserID    bson.ObjectID `bson:"user_id" json:"user_id"`
+	ExpiresAt time.Time     `bson:"expires_at" json:"expires_at"`
+	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
+}
+
+
 // --- DTOs (Data Transfer Objects) for Input Request Validation ---
 // The `binding:"..."` tags enforce Fail-Fast validation at the HTTP layer via Gin.
 // If input fails validation, Gin instantly returns HTTP 400 without touching MongoDB.

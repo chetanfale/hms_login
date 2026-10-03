@@ -78,6 +78,17 @@ func (db *MongoDB) createIndexes(ctx context.Context) error {
 		return fmt.Errorf("failed to create index on refresh_tokens.user_id: %w", err)
 	}
 
+	// 3. TTL Index on 'blacklisted_tokens.expires_at' so MongoDB automatically purges expired tokens
+	blacklistColl := db.Database.Collection("blacklisted_tokens")
+	blacklistIndex := mongo.IndexModel{
+		Keys:    bson.D{{Key: "expires_at", Value: 1}},
+		Options: options.Index().SetExpireAfterSeconds(0), // Automatically delete when current time >= expires_at
+	}
+	_, err = blacklistColl.Indexes().CreateOne(ctx, blacklistIndex)
+	if err != nil {
+		return fmt.Errorf("failed to create TTL index on blacklisted_tokens.expires_at: %w", err)
+	}
+
 	return nil
 }
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"hms_login/internal/models"
 	"hms_login/internal/repository"
@@ -196,11 +197,18 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 // Logout handles POST /api/v1/auth/logout (Protected)
 func (h *AuthHandler) Logout(c *gin.Context) {
 	var req models.RefreshTokenRequest
+	_ = c.ShouldBindJSON(&req)
 
-	// Optional: read refresh token from body to revoke
-	if err := c.ShouldBindJSON(&req); err == nil && req.RefreshToken != "" {
-		_ = h.authService.Logout(c.Request.Context(), req.RefreshToken)
-	}
+	tokenID, _ := c.Get("token_id")
+	tokenIDStr, _ := tokenID.(string)
 
-	utils.SendSuccess(c, http.StatusOK, "Logout successful", nil)
+	userID, _ := c.Get("user_id")
+	userIDStr, _ := userID.(string)
+
+	tokenExp, _ := c.Get("token_expires_at")
+	tokenExpTime, _ := tokenExp.(time.Time)
+
+	_ = h.authService.Logout(c.Request.Context(), tokenIDStr, userIDStr, tokenExpTime, req.RefreshToken)
+
+	utils.SendSuccess(c, http.StatusOK, "Logout successful. Access token and session revoked.", nil)
 }

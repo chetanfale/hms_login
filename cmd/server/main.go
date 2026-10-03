@@ -84,7 +84,7 @@ func main() {
 
 	// Protected Auth API Routes (Requires valid JWT Access Token)
 	protectedGroup := router.Group("/api/v1/auth")
-	protectedGroup.Use(middleware.AuthMiddleware(cfg))
+	protectedGroup.Use(middleware.AuthMiddleware(cfg, userRepo))
 	{
 		protectedGroup.GET("/me", authHandler.GetMe)
 		protectedGroup.POST("/change-password", middleware.RateLimitMiddleware(strictLimiter), authHandler.ChangePassword)

@@ -24,11 +24,18 @@ func GenerateAccessToken(userID, email, role, secret string, expiryMinutes int) 
 	expirationTime := time.Now().Add(time.Duration(expiryMinutes) * time.Minute)
 	expiresInSeconds := int64(expiryMinutes * 60)
 
+	// Generate a unique JWT ID (JTI) for instant token revocation/blacklisting
+	rawJTI, _, err := GenerateCryptoToken()
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to generate JTI for access token: %w", err)
+	}
+
 	claims := &JWTCustomClaims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        rawJTI,
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Subject:   userID,

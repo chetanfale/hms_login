@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"hms_login/internal/config"
+	"hms_login/internal/repository"
 	"hms_login/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
-// AuthMiddleware inspects the Authorization header for a valid Bearer JWT access token.
-func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+// AuthMiddleware inspects the Authorization header for a valid Bearer JWT access token and verifies it hasn't been blacklisted/revoked.
+func AuthMiddleware(cfg *config.Config, repo *repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -35,10 +36,24 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// Store user identity details in Gin context for downstream handlers to access
+		// Instant Revocation Check: Verify if this JWT ID (JTI) has been blacklisted on logout/reset
+		if claims.ID != "" && repo != nil {
+			isBlacklisted, err := repo.IsAccessTokenBlacklisted(c.Request.Context(), claims.ID)
+			if err != nil || isBlacklisted {
+				utils.SendError(c, http.StatusUnauthorized, "Token has been revoked", "UNAUTHORIZED", "This access token was revoked upon logout or password reset.")
+				c.Abort()
+				return
+			}
+		}
+
+		// Store user identity details and raw claims in Gin context for downstream handlers
 		c.Set("user_id", claims.UserID)
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
+		c.Set("token_id", claims.ID)
+		if claims.ExpiresAt != nil {
+			c.Set("token_expires_at", claims.ExpiresAt.Time)
+		}
 
 		c.Next()
 	}

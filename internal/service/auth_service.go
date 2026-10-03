@@ -259,10 +259,26 @@ func (s *AuthService) GetProfile(ctx context.Context, userIDStr string) (*models
 	return s.toUserResponse(user), nil
 }
 
-// Logout revokes the given refresh token session.
-func (s *AuthService) Logout(ctx context.Context, rawRefreshToken string) error {
-	tokenHash := utils.HashSHA256(rawRefreshToken)
-	return s.repo.RevokeRefreshToken(ctx, tokenHash)
+// Logout revokes the given refresh token session and blacklists the active Access Token JTI.
+func (s *AuthService) Logout(ctx context.Context, tokenID string, userIDStr string, tokenExpiresAt time.Time, rawRefreshToken string) error {
+	// 1. Blacklist the current JWT Access Token JTI if present
+	if tokenID != "" && userIDStr != "" {
+		oid, err := bson.ObjectIDFromHex(userIDStr)
+		if err == nil {
+			if tokenExpiresAt.IsZero() {
+				tokenExpiresAt = time.Now().Add(time.Duration(s.cfg.JWTAccessExpiryMinutes) * time.Minute)
+			}
+			_ = s.repo.BlacklistAccessToken(ctx, tokenID, oid, tokenExpiresAt)
+		}
+	}
+
+	// 2. Revoke Refresh Token if provided
+	if rawRefreshToken != "" {
+		tokenHash := utils.HashSHA256(rawRefreshToken)
+		_ = s.repo.RevokeRefreshToken(ctx, tokenHash)
+	}
+
+	return nil
 }
 
 // --- Helper Functions ---

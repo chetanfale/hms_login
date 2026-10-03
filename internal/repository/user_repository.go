@@ -232,3 +232,43 @@ func (r *UserRepository) MarkPasswordResetTokenUsed(ctx context.Context, tokenHa
 
 	return nil
 }
+
+// --- BLACKLISTED ACCESS TOKEN OPERATIONS ---
+
+// BlacklistAccessToken stores a revoked JWT Access Token ID (JTI) in MongoDB.
+func (r *UserRepository) BlacklistAccessToken(ctx context.Context, tokenID string, userID bson.ObjectID, expiresAt time.Time) error {
+	if tokenID == "" {
+		return nil
+	}
+
+	doc := models.BlacklistedToken{
+		TokenID:   tokenID,
+		UserID:    userID,
+		ExpiresAt: expiresAt,
+		CreatedAt: time.Now(),
+	}
+
+	coll := r.db.Database.Collection("blacklisted_tokens")
+	_, err := coll.InsertOne(ctx, doc)
+	if err != nil {
+		return fmt.Errorf("failed to blacklist access token: %w", err)
+	}
+
+	return nil
+}
+
+// IsAccessTokenBlacklisted checks if a JWT Access Token ID (JTI) has been revoked.
+func (r *UserRepository) IsAccessTokenBlacklisted(ctx context.Context, tokenID string) (bool, error) {
+	if tokenID == "" {
+		return false, nil
+	}
+
+	coll := r.db.Database.Collection("blacklisted_tokens")
+	count, err := coll.CountDocuments(ctx, bson.M{"token_id": tokenID})
+	if err != nil {
+		return false, fmt.Errorf("failed to check blacklisted access token: %w", err)
+	}
+
+	return count > 0, nil
+}
+
