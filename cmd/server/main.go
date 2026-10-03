@@ -64,10 +64,18 @@ func main() {
 	router.Use(middleware.SecurityHeadersMiddleware())
 
 	// Configure Rate Limiters
-	// Strict Rate Limiter: 5 requests per minute (burst 5) for sensitive authentication routes
-	strictLimiter := middleware.NewIPRateLimiter(rate.Every(time.Minute/5), 5)
-	// General Rate Limiter: 60 requests per minute (burst 10) for normal routes
-	generalLimiter := middleware.NewIPRateLimiter(rate.Every(time.Minute/60), 10)
+	var strictLimiter *middleware.IPRateLimiter
+	var generalLimiter *middleware.IPRateLimiter
+
+	if cfg.Env == "development" {
+		// Development mode: relaxed limits for smooth API / Postman testing
+		strictLimiter = middleware.NewIPRateLimiter(rate.Every(time.Second/5), 30)
+		generalLimiter = middleware.NewIPRateLimiter(rate.Every(time.Second/10), 60)
+	} else {
+		// Production mode: Strict 5 req/min burst 5 for sensitive routes, 60 req/min for general
+		strictLimiter = middleware.NewIPRateLimiter(rate.Every(time.Minute/5), 5)
+		generalLimiter = middleware.NewIPRateLimiter(rate.Every(time.Minute/60), 10)
+	}
 
 	// Serve OpenAPI Spec and Static Documentation
 	router.StaticFile("/docs/openapi.json", "./docs/openapi.json")

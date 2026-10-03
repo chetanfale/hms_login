@@ -7,12 +7,12 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8080/api/v1",
-      "description": "Local HTTP Development Server"
+      "url": "http://localhost:8081/api/v1",
+      "description": "Local HTTP Development Server (Port 8081)"
     },
     {
-      "url": "https://localhost:8080/api/v1",
-      "description": "Local HTTPS Development Server"
+      "url": "https://localhost:8081/api/v1",
+      "description": "Local HTTPS Development Server (Port 8081)"
     }
   ],
   "components": {
