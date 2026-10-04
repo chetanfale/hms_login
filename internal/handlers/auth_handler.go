@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"hms_login/internal/models"
@@ -86,7 +87,14 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	ipAddress := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 
-	tokenResp, err := h.authService.RefreshToken(c.Request.Context(), req.RefreshToken, ipAddress, userAgent)
+	// Extract old access token from Authorization header if present to blacklist upon rotation
+	oldAccessToken := ""
+	authHeader := c.GetHeader("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		oldAccessToken = strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	tokenResp, err := h.authService.RefreshToken(c.Request.Context(), req.RefreshToken, oldAccessToken, ipAddress, userAgent)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidToken) || errors.Is(err, service.ErrTokenRevoked) {
 			utils.SendError(c, http.StatusUnauthorized, "Invalid or expired refresh token", "INVALID_REFRESH_TOKEN", err.Error())

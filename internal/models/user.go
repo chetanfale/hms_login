@@ -53,6 +53,14 @@ type BlacklistedToken struct {
 	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
 }
 
+// RevocationEvent represents an auth session invalidation broadcast via Redis Pub/Sub
+type RevocationEvent struct {
+	UserID  string `json:"user_id"`
+	TokenID string `json:"token_id,omitempty"`
+	All     bool   `json:"all,omitempty"`
+	Action  string `json:"action,omitempty"`
+}
+
 
 // --- DTOs (Data Transfer Objects) for Input Request Validation ---
 // The `binding:"..."` tags enforce Fail-Fast validation at the HTTP layer via Gin.

@@ -15,6 +15,8 @@ type Config struct {
 	Env                     string
 	MongoURI                string
 	MongoDBName             string
+	RedisAddr               string
+	RedisPassword           string
 	JWTAccessSecret         string
 	JWTRefreshSecret        string
 	JWTAccessExpiryMinutes  int
@@ -38,6 +40,8 @@ func LoadConfig() *Config {
 		Env:                     getEnv("ENV", "development"),
 		MongoURI:                getEnv("MONGO_URI", "mongodb://localhost:27017"),
 		MongoDBName:             getEnv("MONGO_DB_NAME", "hms_auth_db"),
+		RedisAddr:               getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword:           getEnv("REDIS_PASSWORD", ""),
 		JWTAccessSecret:         getEnv("JWT_ACCESS_SECRET", "default_access_secret_change_me_in_prod"),
 		JWTRefreshSecret:        getEnv("JWT_REFRESH_SECRET", "default_refresh_secret_change_me_in_prod"),
 		JWTAccessExpiryMinutes:  getEnvAsInt("JWT_ACCESS_EXPIRY_MINUTES", 15),

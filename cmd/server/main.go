@@ -52,9 +52,17 @@ func main() {
 		}
 	}()
 
-	// 3. Initialize Architecture Layers (Repository -> Service -> Handler)
+	// 3. Initialize Redis Connection for Token Revocation Broadcasts & Caching
+	redisClient, err := db.ConnectRedis(cfg)
+	if err != nil {
+		log.Printf("[WARN] Redis connection failed: %v. Token revocation events will not be broadcast to websockets.\n", err)
+	} else {
+		defer redisClient.Close()
+	}
+
+	// 4. Initialize Architecture Layers (Repository -> Service -> Handler)
 	userRepo := repository.NewUserRepository(mongoDB)
-	authService := service.NewAuthService(userRepo, cfg)
+	authService := service.NewAuthService(userRepo, redisClient, cfg)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	// 4. Initialize Gin Router & Middlewares

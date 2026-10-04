@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"hms_login/internal/config"
+	"hms_login/internal/db"
 	"hms_login/internal/models"
 	"hms_login/internal/repository"
 	"hms_login/internal/utils"
@@ -25,15 +26,17 @@ var (
 
 // AuthService contains all business logic for user registration, authentication, session management, and password recovery.
 type AuthService struct {
-	repo *repository.UserRepository
-	cfg  *config.Config
+	repo  *repository.UserRepository
+	redis *db.RedisClient
+	cfg   *config.Config
 }
 
 // NewAuthService creates a new instance of AuthService.
-func NewAuthService(repo *repository.UserRepository, cfg *config.Config) *AuthService {
+func NewAuthService(repo *repository.UserRepository, redisClient *db.RedisClient, cfg *config.Config) *AuthService {
 	return &AuthService{
-		repo: repo,
-		cfg:  cfg,
+		repo:  repo,
+		redis: redisClient,
+		cfg:   cfg,
 	}
 }
 
@@ -94,7 +97,7 @@ func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest, ipAdd
 }
 
 // RefreshToken exchanges an existing valid Refresh Token for a fresh Access Token AND fresh Refresh Token (Rotation).
-func (s *AuthService) RefreshToken(ctx context.Context, rawRefreshToken, ipAddress, userAgent string) (*models.TokenResponse, error) {
+func (s *AuthService) RefreshToken(ctx context.Context, rawRefreshToken, oldAccessToken, ipAddress, userAgent string) (*models.TokenResponse, error) {
 	// 1. Compute SHA-256 hash of raw token to query MongoDB
 	tokenHash := utils.HashSHA256(rawRefreshToken)
 
@@ -110,6 +113,14 @@ func (s *AuthService) RefreshToken(ctx context.Context, rawRefreshToken, ipAddre
 	if tokenDoc.Revoked {
 		log.Printf("[SECURITY WARN] Attempted reuse of revoked refresh token for UserID: %s. Revoking all user sessions.\n", tokenDoc.UserID.Hex())
 		_ = s.repo.RevokeAllUserTokens(ctx, tokenDoc.UserID)
+		if s.redis != nil {
+			_ = s.redis.BlacklistUser(ctx, tokenDoc.UserID.Hex(), 24*time.Hour)
+			_ = s.redis.PublishRevocation(ctx, &models.RevocationEvent{
+				UserID: tokenDoc.UserID.Hex(),
+				All:    true,
+				Action: "token_reuse",
+			})
+		}
 		return nil, ErrTokenRevoked
 	}
 
@@ -122,13 +133,34 @@ func (s *AuthService) RefreshToken(ctx context.Context, rawRefreshToken, ipAddre
 		return nil, fmt.Errorf("failed to revoke old refresh token: %w", err)
 	}
 
-	// 4. Fetch User details
+	// 4. Invalidate old access token if provided in header
+	if oldAccessToken != "" {
+		claims, err := utils.ValidateAccessToken(oldAccessToken, s.cfg.JWTAccessSecret)
+		if err == nil && claims.ID != "" {
+			var exp time.Time
+			if claims.ExpiresAt != nil {
+				exp = claims.ExpiresAt.Time
+			} else {
+				exp = time.Now().Add(time.Duration(s.cfg.JWTAccessExpiryMinutes) * time.Minute)
+			}
+			_ = s.repo.BlacklistAccessToken(ctx, claims.ID, tokenDoc.UserID, exp)
+			if s.redis != nil {
+				ttl := time.Until(exp)
+				if ttl <= 0 {
+					ttl = time.Duration(s.cfg.JWTAccessExpiryMinutes) * time.Minute
+				}
+				_ = s.redis.BlacklistToken(ctx, claims.ID, ttl)
+			}
+		}
+	}
+
+	// 5. Fetch User details
 	user, err := s.repo.GetUserByID(ctx, tokenDoc.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 5. Generate new token pair
+	// 6. Generate new token pair
 	return s.generateTokenPair(ctx, user, ipAddress, userAgent)
 }
 
@@ -203,6 +235,14 @@ func (s *AuthService) ResetPassword(ctx context.Context, req *models.ResetPasswo
 
 	// Revoke all existing sessions to force user to log in with new password
 	_ = s.repo.RevokeAllUserTokens(ctx, tokenDoc.UserID)
+	if s.redis != nil {
+		_ = s.redis.BlacklistUser(ctx, tokenDoc.UserID.Hex(), 24*time.Hour)
+		_ = s.redis.PublishRevocation(ctx, &models.RevocationEvent{
+			UserID: tokenDoc.UserID.Hex(),
+			All:    true,
+			Action: "reset_password",
+		})
+	}
 
 	return nil
 }
@@ -240,6 +280,14 @@ func (s *AuthService) ChangePassword(ctx context.Context, userIDStr string, req 
 
 	// Revoke all existing sessions
 	_ = s.repo.RevokeAllUserTokens(ctx, oid)
+	if s.redis != nil {
+		_ = s.redis.BlacklistUser(ctx, userIDStr, 24*time.Hour)
+		_ = s.redis.PublishRevocation(ctx, &models.RevocationEvent{
+			UserID: userIDStr,
+			All:    true,
+			Action: "change_password",
+		})
+	}
 
 	return nil
 }
@@ -269,6 +317,18 @@ func (s *AuthService) Logout(ctx context.Context, tokenID string, userIDStr stri
 				tokenExpiresAt = time.Now().Add(time.Duration(s.cfg.JWTAccessExpiryMinutes) * time.Minute)
 			}
 			_ = s.repo.BlacklistAccessToken(ctx, tokenID, oid, tokenExpiresAt)
+		}
+		if s.redis != nil {
+			ttl := time.Until(tokenExpiresAt)
+			if ttl <= 0 {
+				ttl = time.Duration(s.cfg.JWTAccessExpiryMinutes) * time.Minute
+			}
+			_ = s.redis.BlacklistToken(ctx, tokenID, ttl)
+			_ = s.redis.PublishRevocation(ctx, &models.RevocationEvent{
+				UserID:  userIDStr,
+				TokenID: tokenID,
+				Action:  "logout",
+			})
 		}
 	}
 
